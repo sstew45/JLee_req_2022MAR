@@ -1,0 +1,94 @@
+---
+title: "Combine Plot and Table in R"
+author: "Scott Stewart"
+date: "3/3/2022"
+output: 
+  rmdformats::readthedown:
+    code_folding: show
+---
+
+```{r setup-knitr, include = FALSE}
+knitr::opts_chunk$set(message = FALSE) # suppress messages
+```
+
+## Plot
+
+load packages:
+```{r}
+library(tidyverse)
+library(ggpmisc)
+```
+
+### data for plot
+```{r}
+data <- tibble(
+  group = c("A", "A", "A", "A", "B", "B", "B", "B", "C", "C", "C", "C"),
+  x = c(1, 5, 15, 20, 3, 11, 15, 18, 6, 10, 17, 16),
+  y = c(15, 13, 8, 4, 12, 10, 13, 7, 5, 9, 12, 11))
+data
+```
+
+### basic plot
+```{r}
+p1 <- data %>% 
+  ggplot(aes(x = x, y = y, fill = group, shape = group)) +
+  geom_point(aes(color = group), size = 3)
+p1
+```
+
+### add options to plot
+```{r}
+p2 <- p1 + 
+  geom_smooth(aes(color = group), 
+              method = lm, se = TRUE) + # add lines & confidence bands
+  scale_fill_brewer(palette = "Set1") + # colors for confidence bands
+  scale_colour_brewer(palette = "Set1") + # colors for lines
+  geom_text(x = 15, y = 20, label = "p = 0.05", color = "purple") + # add text
+  theme_classic() + # remove gray background
+  labs(
+    title = "plot title",
+    x = "independent variable",
+    y = "dependent variable"
+  )
+p2
+```
+
+## Table
+
+### data for table
+```{r}
+table <- tibble(group = c("A", "B", "C"),
+                at_risk = c(10, 13, 18),
+                n = c(80, 70, 65))
+table
+```
+
+### create object from table
+```{r}
+library(gridExtra)
+p3 <- tableGrob(table, rows = NULL, theme = ttheme_gtminimal())
+```
+
+## Combine Plot and Table
+
+`draw_plot(obj, a, b, c, d)` will define the starting point, width and height
+for each object:  
+  
+  - `obj` = name of object
+  - `a` = relative position of left edge (0 = far left)
+  - `b` = relative position of bottom edge (0 = bottom)
+  - `c` = relative width (max = 1)
+  - `d` = relative height (max = 1)
+  
+```{r}
+library(cowplot)
+p4 <- ggdraw() +
+  draw_plot(p2, 0, 0.2, 1, 0.8) + 
+  draw_plot(p3, 0.1, 0.05, 0.3, 0.15)
+p4
+```
+
+## Save as Image
+```{r message = TRUE}
+ggsave("C:/Users/stewartscott/Documents/Programming/R/plot_plus_table.png", p4)
+```
